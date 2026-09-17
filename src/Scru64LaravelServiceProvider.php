@@ -7,20 +7,21 @@ use GrantHolle\Scru64\Scru64Generator;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Database\Schema\ForeignIdColumnDefinition;
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Illuminate\Support\ServiceProvider;
 
-class Scru64LaravelServiceProvider extends PackageServiceProvider
+class Scru64LaravelServiceProvider extends ServiceProvider
 {
-    public function configurePackage(Package $package): void
+    public function register(): void
     {
-        $package
-            ->name('scru64-laravel')
-            ->hasConfigFile();
+        $this->mergeConfigFrom(__DIR__.'/../config/scru64-laravel.php', 'scru64-laravel');
     }
 
-    public function packageBooted(): void
+    public function boot(): void
     {
+        $this->publishes([
+            __DIR__.'/../config/scru64-laravel.php' => config_path('scru64-laravel.php'),
+        ], 'scru64-laravel-config');
+
         Blueprint::macro('scru64', function (string $column = 'id'): ColumnDefinition {
             /** @var Blueprint $this */
             return $this->char($column, 12)->primary();
