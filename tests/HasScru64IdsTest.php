@@ -55,6 +55,12 @@ it('keeps an explicitly set id', function () {
     expect($post->id)->toBe('0u2pf62ji4b9');
 });
 
+it('resolves uppercase ids in route binding', function () {
+    $post = Post::create(['title' => 'x']);
+
+    expect((new Post)->resolveRouteBinding(strtoupper($post->id))->id)->toBe($post->id);
+});
+
 it('rejects invalid ids in route binding', function () {
     (new Post)->resolveRouteBinding('not-a-scru64');
 })->throws(ModelNotFoundException::class);

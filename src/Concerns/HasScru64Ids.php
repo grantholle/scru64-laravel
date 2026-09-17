@@ -9,7 +9,9 @@ use InvalidArgumentException;
 
 trait HasScru64Ids
 {
-    use HasUniqueStringIds;
+    use HasUniqueStringIds {
+        resolveRouteBindingQuery as private baseResolveRouteBindingQuery;
+    }
 
     /**
      * Generate a new SCRU64 ID for the model.
@@ -17,6 +19,20 @@ trait HasScru64Ids
     public function newUniqueId(): string
     {
         return (string) Scru64::generate();
+    }
+
+    /**
+     * Retrieve the model for a bound value, normalizing case since SCRU64 IDs are case-insensitive.
+     */
+    public function resolveRouteBindingQuery($query, $value, $field = null)
+    {
+        $column = $field ?: $this->getRouteKeyName();
+
+        if (is_string($value) && in_array($column, $this->uniqueIds())) {
+            $value = strtolower($value);
+        }
+
+        return $this->baseResolveRouteBindingQuery($query, $value, $field);
     }
 
     /**

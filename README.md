@@ -52,6 +52,13 @@ Schema::create('comments', function (Blueprint $table) {
 
 `scru64($column = 'id')` and `foreignScru64($column)` are Blueprint macros; the foreign variant behaves like `foreignUuid()`.
 
+On MySQL/MariaDB, IDs are lowercase base36, so an ASCII binary collation keeps the column and its indexes compact and makes comparisons cheaper:
+
+```php
+$table->scru64()->charset('ascii')->collation('ascii_bin');
+$table->foreignScru64('post_id')->charset('ascii')->collation('ascii_bin')->constrained();
+```
+
 The trait sets `$incrementing = false` and `$keyType = 'string'`, fills the key on create, and makes route model binding 404 on malformed IDs, exactly like `HasUuids`. Override `uniqueIds()` to generate IDs for additional columns:
 
 ```php
