@@ -1,12 +1,12 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace GrantHolle\Scru64Laravel\Commands;
 
 use Illuminate\Console\Command;
 
-class SkeletonCommand extends Command
+class Scru64LaravelCommand extends Command
 {
-    public $signature = 'skeleton';
+    public $signature = 'scru64-laravel';
 
     public $description = 'My command';
 
