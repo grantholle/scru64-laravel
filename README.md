@@ -1,59 +1,64 @@
-# Use SCRU64 ID's in your Laravel application.
+# SCRU64 IDs for Laravel
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/grantholle/scru64-laravel.svg?style=flat-square)](https://packagist.org/packages/grantholle/scru64-laravel)
-[![GitHub Tests Action Status](https://github.com/spatie/package-scru64-laravel-laravel/actions/workflows/run-tests.yml/badge.svg)](https://github.com/grantholle/scru64-laravel/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://github.com/spatie/package-scru64-laravel-laravel/actions/workflows/fix-php-code-style-issues.yml/badge.svg)](https://github.com/grantholle/scru64-laravel/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
+[![Tests](https://github.com/grantholle/scru64-laravel/actions/workflows/run-tests.yml/badge.svg)](https://github.com/grantholle/scru64-laravel/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/grantholle/scru64-laravel.svg?style=flat-square)](https://packagist.org/packages/grantholle/scru64-laravel)
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+Use [SCRU64](https://github.com/scru64/spec) identifiers as Eloquent primary keys, the same way you'd use Laravel's `HasUuids`. Built on [grantholle/scru64](https://github.com/grantholle/scru64).
 
-## Support us
-
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/scru64-laravel.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/scru64-laravel)
-
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
-
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+SCRU64 IDs are 12-character, case-insensitive, time-sortable strings (`0u375nxqh5cq`) that also fit in a signed `BIGINT`.
 
 ## Installation
-
-You can install the package via composer:
 
 ```bash
 composer require grantholle/scru64-laravel
 ```
 
-You can publish and run the migrations with:
+It works out of the box on a single server. If more than one server generates IDs, give each one a unique node ID in its `.env`, or uniqueness is not guaranteed:
 
-```bash
-php artisan vendor:publish --tag="scru64-laravel-migrations"
-php artisan migrate
+```dotenv
+SCRU64_NODE_SPEC=42/8
 ```
 
-You can publish the config file with:
+The format is `<node_id>/<node_id_size>`; see the [scru64 README](https://github.com/grantholle/scru64#node-spec) for details. You can also publish the config file:
 
 ```bash
 php artisan vendor:publish --tag="scru64-laravel-config"
 ```
 
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
-
-Optionally, you can publish the views using
-
-```bash
-php artisan vendor:publish --tag="scru64-laravel-views"
-```
-
 ## Usage
 
 ```php
-$scru64Laravel = new GrantHolle\Scru64Laravel();
-echo $scru64Laravel->echoPhrase('Hello, GrantHolle!');
+use GrantHolle\Scru64Laravel\Concerns\HasScru64Ids;
+use Illuminate\Database\Eloquent\Model;
+
+class Post extends Model
+{
+    use HasScru64Ids;
+}
+```
+
+```php
+Schema::create('posts', function (Blueprint $table) {
+    $table->scru64(); // char('id', 12)->primary()
+    // ...
+});
+
+Schema::create('comments', function (Blueprint $table) {
+    $table->scru64();
+    $table->foreignScru64('post_id')->constrained();
+});
+```
+
+`scru64($column = 'id')` and `foreignScru64($column)` are Blueprint macros; the foreign variant behaves like `foreignUuid()`.
+
+The trait sets `$incrementing = false` and `$keyType = 'string'`, fills the key on create, and makes route model binding 404 on malformed IDs, exactly like `HasUuids`. Override `uniqueIds()` to generate IDs for additional columns:
+
+```php
+public function uniqueIds(): array
+{
+    return ['id', 'public_id'];
+}
 ```
 
 ## Testing
@@ -65,10 +70,6 @@ composer test
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
-
-## Contributing
-
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Security Vulnerabilities
 
