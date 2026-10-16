@@ -14,6 +14,16 @@ class Post extends Model
     protected $guarded = [];
 }
 
+class PrefixedPost extends Post
+{
+    protected $table = 'prefixed_posts';
+
+    public function idPrefix(): string
+    {
+        return 'post_';
+    }
+}
+
 beforeEach(function () {
     Schema::create('posts', function ($table) {
         $table->scru64();
@@ -64,3 +74,18 @@ it('resolves uppercase ids in route binding', function () {
 it('rejects invalid ids in route binding', function () {
     (new Post)->resolveRouteBinding('not-a-scru64');
 })->throws(ModelNotFoundException::class);
+
+it('prepends a configured prefix', function () {
+    Schema::create('prefixed_posts', function ($table) {
+        $table->scru64('id', 'post_');
+        $table->string('title');
+    });
+
+    $post = PrefixedPost::create(['title' => 'x']);
+
+    expect($post->id)->toMatch('/^post_[0-9a-z]{12}$/')
+        ->and((new PrefixedPost)->resolveRouteBinding('post_'.strtoupper(substr($post->id, 5)))->id)->toBe($post->id);
+
+    expect(fn () => (new PrefixedPost)->resolveRouteBinding(substr($post->id, 5)))
+        ->toThrow(ModelNotFoundException::class);
+});

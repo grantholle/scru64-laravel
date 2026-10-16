@@ -22,17 +22,17 @@ class Scru64LaravelServiceProvider extends ServiceProvider
             __DIR__.'/../config/scru64-laravel.php' => config_path('scru64-laravel.php'),
         ], 'scru64-laravel-config');
 
-        Blueprint::macro('scru64', function (string $column = 'id'): ColumnDefinition {
+        Blueprint::macro('scru64', function (string $column = 'id', string $prefix = ''): ColumnDefinition {
             /** @var Blueprint $this */
-            return $this->char($column, 12)->primary();
+            return $this->char($column, 12 + strlen($prefix))->primary();
         });
 
-        Blueprint::macro('foreignScru64', function (string $column): ForeignIdColumnDefinition {
+        Blueprint::macro('foreignScru64', function (string $column, string $prefix = ''): ForeignIdColumnDefinition {
             /** @var Blueprint $this */
             $definition = new ForeignIdColumnDefinition($this, [
                 'type' => 'char',
                 'name' => $column,
-                'length' => 12,
+                'length' => 12 + strlen($prefix),
             ]);
 
             $this->addColumnDefinition($definition);

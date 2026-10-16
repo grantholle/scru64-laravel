@@ -18,7 +18,15 @@ trait HasScru64Ids
      */
     public function newUniqueId(): string
     {
-        return (string) Scru64::generate();
+        return $this->idPrefix().Scru64::generate();
+    }
+
+    /**
+     * The prefix prepended to generated IDs, e.g. "post_". Not part of the SCRU64 spec.
+     */
+    public function idPrefix(): string
+    {
+        return '';
     }
 
     /**
@@ -28,8 +36,10 @@ trait HasScru64Ids
     {
         $column = $field ?: $this->getRouteKeyName();
 
-        if (is_string($value) && in_array($column, $this->uniqueIds())) {
-            $value = strtolower($value);
+        $prefix = $this->idPrefix();
+
+        if (is_string($value) && in_array($column, $this->uniqueIds()) && str_starts_with($value, $prefix)) {
+            $value = $prefix.strtolower(substr($value, strlen($prefix)));
         }
 
         return $this->baseResolveRouteBindingQuery($query, $value, $field);
@@ -40,12 +50,14 @@ trait HasScru64Ids
      */
     protected function isValidUniqueId($value): bool
     {
-        if (! is_string($value)) {
+        $prefix = $this->idPrefix();
+
+        if (! is_string($value) || ! str_starts_with($value, $prefix)) {
             return false;
         }
 
         try {
-            Scru64Id::fromString($value);
+            Scru64Id::fromString(substr($value, strlen($prefix)));
 
             return true;
         } catch (InvalidArgumentException) {

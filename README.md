@@ -68,6 +68,24 @@ public function uniqueIds(): array
 }
 ```
 
+### Prefixes
+
+Not part of the SCRU64 spec, but you can prefix generated IDs (Stripe-style `post_0u375nxqh5cq`) by overriding `idPrefix()`. Pass the same prefix to the macros so the column is wide enough:
+
+```php
+public function idPrefix(): string
+{
+    return 'post_';
+}
+```
+
+```php
+$table->scru64('id', (new Post)->idPrefix()); // char('id', 17)
+$table->foreignScru64('post_id', 'post_')->constrained();
+```
+
+Route binding then requires the prefix; the SCRU64 part stays case-insensitive.
+
 ## Testing
 
 ```bash
